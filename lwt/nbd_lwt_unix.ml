@@ -105,13 +105,13 @@ let connect hostname port =
   >>= fun () ->
   (generic_channel_of_fd socket None)
 
-let init_tls_get_ctx ?curve ~certfile ~ciphersuites =
+let init_tls_get_ctx ?curve ~certfile =
   Ssl_threads.init ();
   Ssl.init ();
   let mk_ctx role_ctx = Ssl.create_context Ssl.TLSv1_2 role_ctx in
   let ctx = mk_ctx Ssl.Server_context in
   Ssl.use_certificate ctx certfile certfile; (* Second one is being used as privkey filename *)
-  Ssl.set_cipher_list ctx ciphersuites;
+  Ssl.set_cipher_list ctx Xcp_const.good_ciphersuites;
   begin match curve with
   | None -> ()
   | Some curve -> Ssl.init_ec_from_named_curve ctx curve;

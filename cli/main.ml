@@ -161,20 +161,19 @@ module Impl = struct
     `Ok (Lwt_main.run t)
 
   (* Helper function for use within this module *)
-  let init_tls_get_server_ctx ~curve ~certfile ~ciphersuites no_tls =
+  let init_tls_get_server_ctx ~curve ~certfile no_tls =
     if no_tls then None
     else (
       let certfile = require_str "certfile" certfile in
-      let ciphersuites = require_str "ciphersuites" ciphersuites in
       Some (Nbd_lwt_unix.TlsServer
-              (Nbd_lwt_unix.init_tls_get_ctx ~curve ~certfile ~ciphersuites)
+              (Nbd_lwt_unix.init_tls_get_ctx ~curve ~certfile)
            )
     )
 
   let ignore_exn t () = Lwt.catch t (fun _ -> Lwt.return_unit)
 
-  let serve _common filename port exportname certfile curve ciphersuites no_tls =
-    let tls_role = init_tls_get_server_ctx ~curve ~certfile ~ciphersuites no_tls in
+  let serve _common filename port exportname certfile curve _ no_tls =
+    let tls_role = init_tls_get_server_ctx ~curve ~certfile no_tls in
     let filename = require "filename" filename in
     let validate ~client_exportname =
       match exportname with
@@ -229,8 +228,8 @@ module Impl = struct
     in
     Lwt_main.run t
 
-  let mirror _common filename port secondary certfile curve ciphersuites no_tls =
-    let tls_role = init_tls_get_server_ctx ~curve ~certfile ~ciphersuites no_tls in
+  let mirror _common filename port secondary certfile curve _ no_tls =
+    let tls_role = init_tls_get_server_ctx ~curve ~certfile no_tls in
     let filename = require "filename" filename in
     let secondary = require "secondary" secondary in
     let t =
@@ -284,8 +283,8 @@ let certfile =
   let doc = "Path to file containing TLS certificate." in
   Arg.(value & opt string "" & info ["certfile"] ~doc)
 let ciphersuites =
-  let doc = "Set of ciphersuites for TLS (specified in the format accepted by OpenSSL, stunnel etc.)" in
-  Arg.(value & opt string "ECDHE-RSA-AES256-GCM-SHA384" & info ["ciphersuites"] ~doc)
+  let doc = "REMOVED (this value will be ignored). Set of ciphersuites for TLS (specified in the format accepted by OpenSSL, stunnel etc.)" in
+  Arg.(value & opt ((fun _ -> `Ok "unused_cipher_string"), Format.pp_print_string) "unused_cipher_string" & info ["ciphersuites"] ~doc)
 let curve =
   let doc = "EC curve to use" in
   Arg.(value & opt string "secp384r1" & info ["curve"] ~doc)
